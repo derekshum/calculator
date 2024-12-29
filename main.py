@@ -8,6 +8,15 @@ def get_number_from_digits(digit_stack: list[int]) -> int:
     return current_number
 
 
+def add_or_subtract(digit_stack: list[int], previous_operator_positive: bool) -> int:
+    current_number: int = get_number_from_digits(digit_stack)
+
+    if previous_operator_positive:
+        return current_number
+    else:
+        return -current_number
+
+
 def calculate(s: str) -> int:
     digit_stack: list[int] = []
     previous_operator_positive: bool = True
@@ -19,13 +28,7 @@ def calculate(s: str) -> int:
             digit_stack.append(int(c))
         elif c in ['+', '-']:
             if len(digit_stack) > 0:
-                current_number: int = get_number_from_digits(digit_stack)
-
-                if previous_operator_positive:
-                    total += current_number
-                else:
-                    total -= current_number
-
+                total += add_or_subtract(digit_stack, previous_operator_positive)
                 if c == '+':
                     previous_operator_positive = True
                 else:
@@ -33,13 +36,7 @@ def calculate(s: str) -> int:
             elif c == '-':
                 previous_operator_positive = not previous_operator_positive
 
-    current_number: int = get_number_from_digits(digit_stack)
-
-    if previous_operator_positive:
-        total += current_number
-    else:
-        total -= current_number
-
+    total += add_or_subtract(digit_stack, previous_operator_positive)
     return total
 
 
