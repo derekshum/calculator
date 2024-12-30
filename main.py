@@ -8,19 +8,21 @@ def get_number_from_digits(digit_stack: list[int]) -> int:
     return current_number
 
 
-def add_or_subtract(digit_stack: list[int], previous_operator_positive: bool) -> int:
-    current_number: int = get_number_from_digits(digit_stack)
+def add_or_subtract(digit_stack: list[int], operator_stack: list[bool], number_stack: list[int], due_to_parenthesis_closing: bool = False):
+    if len(digit_stack) > 0:
+        current_number: int = get_number_from_digits(digit_stack)
+        if operator_stack.pop():
+            number_stack[len(number_stack) - 1] += current_number
+        else:
+            number_stack[len(number_stack) - 1] -= current_number
+    elif due_to_parenthesis_closing:
+        operator_stack.pop()
 
-    if previous_operator_positive:
-        return current_number
-    else:
-        return -current_number
 
-
-def calculate(s: str) -> int:
+def calculate(s: str) -> int | str:
     digit_stack: list[int] = []
-    previous_operator_positive: bool = True
-    total: int = 0
+    operator_stack: list[bool] = [True] # Operation to do with current parenthesis nesting. True is positive/plus, False is negative/minus
+    number_stack: list[int] = [0] # Running total at current parenthesis nesting.
     for c in s:
         if c == ' ':
             pass # 2 3 treated as 23
@@ -28,20 +30,33 @@ def calculate(s: str) -> int:
             digit_stack.append(int(c))
         elif c in ['+', '-']:
             if len(digit_stack) > 0:
-                total += add_or_subtract(digit_stack, previous_operator_positive)
+                add_or_subtract(digit_stack, operator_stack, number_stack)
                 if c == '+':
-                    previous_operator_positive = True
+                    operator_stack.append(True)
                 else:
-                    previous_operator_positive = False
+                    operator_stack.append(False)
             elif c == '-':
-                previous_operator_positive = not previous_operator_positive
-
-    total += add_or_subtract(digit_stack, previous_operator_positive)
-    return total
+                operator_stack[len(operator_stack) - 1] = not operator_stack[len(operator_stack) - 1]
+        elif c == '(':
+            operator_stack.append(True)
+            number_stack.append(0)
+        elif c == ')':
+            add_or_subtract(digit_stack, operator_stack, number_stack, True)
+            current_operator: bool = operator_stack.pop()
+            current_number: int = number_stack.pop()
+            if current_operator:
+                number_stack[len(number_stack) - 1] += current_number
+            else:
+                number_stack[len(number_stack) - 1] -= current_number
+            operator_stack.append(True)
+        else:
+            return f'Invalid character {c}'
+    add_or_subtract(digit_stack, operator_stack, number_stack)
+    return number_stack[0]
 
 
 if __name__ == '__main__':
     while True:
-        print('Type your equation in and press enter (only +, -, and numbers will be considered currently)')
+        print('Type your equation in and press enter. Only +, -, (, ), and numbers will be considered currently.')
         equation = input()
         print(calculate(equation))
